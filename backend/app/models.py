@@ -17,3 +17,20 @@ class User(db.Model, UserMixin):
         onupdate=db.func.now(),
         nullable=False,
     )
+
+class Product(db.Model):
+    __tablename__ = "products"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(180), unique=True, nullable=False, index=True)
+    price = db.Column(db.Numeric(10, 2), nullable=False)  
+    stock = db.Column(db.Integer, nullable=False, default=0)
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now(), nullable=False)
+    updated_at = db.Column(
+        db.DateTime,
+        server_default=db.func.now(),
+        onupdate=db.func.now(),
+        nullable=False,
+    )
