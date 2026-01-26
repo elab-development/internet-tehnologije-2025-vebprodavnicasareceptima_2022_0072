@@ -6,7 +6,7 @@ from sqlalchemy import asc, desc
 from app.extensions import db
 from app.models import Product
 
-ALLOWED_SORT_FIELDS = {"name", "price", "stock", "created_at"}
+ALLOWED_SORT_FIELDS = {"name", "unit", "price", "stock", "created_at"}
 ALLOWED_SORT_DIR = {"asc", "desc"}
 
 
@@ -22,11 +22,15 @@ def create_product():
     data = request.get_json(silent=True) or {}
 
     name = (data.get("name") or "").strip()
+    unit = (data.get("unit") or "").strip()
     price_raw = data.get("price")
     stock_raw = data.get("stock", 0)
 
     if not name:
         return jsonify({"error": "Name is required."}), 400
+
+    if len(unit) > 50:
+        return jsonify({"error": "Unit must be at most 50 characters."}), 400
 
     price = _parse_price(price_raw)
     if price is None or price <= 0:
@@ -40,7 +44,7 @@ def create_product():
     if stock < 0:
         return jsonify({"error": "Stock must be >= 0."}), 400
 
-    product = Product(name=name, price=price, stock=stock)
+    product = Product(name=name, unit=unit, price=price, stock=stock)
 
     db.session.add(product)
     try:
@@ -54,6 +58,7 @@ def create_product():
         "product": {
             "id": product.id,
             "name": product.name,
+            "unit": product.unit,
             "price": str(product.price),
             "stock": product.stock,
         }
@@ -72,6 +77,12 @@ def update_product(product_id: int):
         if not name:
             return jsonify({"error": "Name cannot be empty."}), 400
         product.name = name
+
+    if "unit" in data:
+        unit = (data.get("unit") or "").strip()
+        if len(unit) > 50:
+            return jsonify({"error": "Unit must be at most 50 characters."}), 400
+        product.unit = unit
 
     if "price" in data:
         price = _parse_price(data.get("price"))
@@ -99,6 +110,7 @@ def update_product(product_id: int):
         "product": {
             "id": product.id,
             "name": product.name,
+            "unit": product.unit,
             "price": str(product.price),
             "stock": product.stock,
         }
@@ -141,6 +153,7 @@ def list_products():
             {
                 "id": p.id,
                 "name": p.name,
+                "unit": p.unit,
                 "price": str(p.price),
                 "stock": p.stock,
             }
@@ -162,6 +175,7 @@ def get_product(product_id: int):
         "product": {
             "id": p.id,
             "name": p.name,
+            "unit": p.unit,
             "price": str(p.price),
             "stock": p.stock,
         }
