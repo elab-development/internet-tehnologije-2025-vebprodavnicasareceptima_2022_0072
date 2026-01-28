@@ -25,3 +25,9 @@ def require_role(*roles):
         return wrapper
 
     return decorator
+
+def require_user(fn):
+    return require_role("user")(fn)
+
+def require_admin(fn):
+    return require_role("admin")(fn)
