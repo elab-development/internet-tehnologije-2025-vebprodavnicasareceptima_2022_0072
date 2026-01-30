@@ -3,9 +3,10 @@ import { useAuthStore } from '../../stores/authStore';
 
 export default function RequireAdmin() {
   const user = useAuthStore((s) => s.user);
+  const role = (user?.role || '').toLowerCase();
 
   if (!user) return <Navigate to='/login' replace />;
-  if (user.role !== 'admin') return <Navigate to='/' replace />;
+  if (role !== 'admin') return <Navigate to='/' replace />;
 
   return <Outlet />;
 }

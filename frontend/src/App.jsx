@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 
+import AuthBootstrap from './components/auth/AuthBootstrap';
 import RequireGuest from './components/protectors/RequireGuest';
 import RequireAuth from './components/protectors/RequireAuth';
 import RequireAdmin from './components/protectors/RequireAdmin';
@@ -24,6 +25,7 @@ import Admin from './pages/Admin';
 function App() {
   return (
     <BrowserRouter>
+      <AuthBootstrap />
       <div className='min-h-screen flex flex-col'>
         <Navbar />
 
