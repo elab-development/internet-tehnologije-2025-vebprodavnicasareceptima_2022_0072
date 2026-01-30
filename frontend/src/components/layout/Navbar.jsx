@@ -14,6 +14,7 @@ import {
 
 import logo from '../../assets/logo.png';
 import { useAuthStore } from '../../stores/authStore';
+import { useCartStore } from '../../stores/cartStore';
 
 function NavItem({ to, icon: Icon, children, onClick }) {
   return (
@@ -42,6 +43,7 @@ export default function Navbar() {
     () => (user?.role || '').toLowerCase() === 'admin',
     [user],
   );
+  const cartCount = useCartStore((s) => s.totalItems());
 
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -82,9 +84,26 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <NavItem to='/cart' icon={ShoppingCart}>
-                Cart
-              </NavItem>
+              <NavLink
+                to='/cart'
+                className={({ isActive }) =>
+                  [
+                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                    isActive
+                      ? 'bg-red-600 text-white'
+                      : 'text-slate-700 hover:bg-slate-100',
+                  ].join(' ')
+                }
+              >
+                <ShoppingCart size={18} />
+                <span>Cart</span>
+
+                {cartCount > 0 ? (
+                  <span className='ml-1 inline-flex min-w-[22px] items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
+                    {cartCount}
+                  </span>
+                ) : null}
+              </NavLink>
               <NavItem to='/profile' icon={User}>
                 Profile
               </NavItem>
@@ -152,13 +171,27 @@ export default function Navbar() {
 
               {user ? (
                 <>
-                  <NavItem
+                  <NavLink
                     to='/cart'
-                    icon={ShoppingCart}
+                    className={({ isActive }) =>
+                      [
+                        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition',
+                        isActive
+                          ? 'bg-red-600 text-white'
+                          : 'text-slate-700 hover:bg-slate-100',
+                      ].join(' ')
+                    }
                     onClick={() => setOpen(false)}
                   >
-                    Cart
-                  </NavItem>
+                    <ShoppingCart size={18} />
+                    <span>Cart</span>
+
+                    {cartCount > 0 ? (
+                      <span className='ml-1 inline-flex min-w-[22px] items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
+                        {cartCount}
+                      </span>
+                    ) : null}
+                  </NavLink>
                   <NavItem
                     to='/profile'
                     icon={User}
