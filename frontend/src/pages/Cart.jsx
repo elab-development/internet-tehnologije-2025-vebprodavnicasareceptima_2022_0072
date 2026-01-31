@@ -1,10 +1,21 @@
-import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Minus, Plus, Trash2, ShoppingBag, CreditCard } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 import { useCartStore } from '../stores/cartStore';
+import { useOrdersStore } from '../stores/ordersStore';
+import { useAuthStore } from '../stores/authStore';
 import { money } from '../utils/helpers';
 
+import CheckoutModal from '../components/cart/CheckoutModal';
+
 export default function Cart() {
+  const navigate = useNavigate();
+
+  const user = useAuthStore((s) => s.user);
+  const role = (user?.role || '').toLowerCase();
+  const isUser = role === 'user';
+
   const items = useCartStore((s) => s.items);
   const increase = useCartStore((s) => s.increase);
   const decrease = useCartStore((s) => s.decrease);
@@ -13,6 +24,35 @@ export default function Cart() {
   const clear = useCartStore((s) => s.clear);
   const total = useCartStore((s) => s.totalPrice());
   const count = useCartStore((s) => s.totalItems());
+
+  const createOrder = useOrdersStore((s) => s.createOrder);
+  const isLoading = useOrdersStore((s) => s.isLoading);
+  const error = useOrdersStore((s) => s.error);
+  const clearMessages = useOrdersStore((s) => s.clearMessages);
+
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const orderPayloadItems = useMemo(() => {
+    return (items || []).map((it) => ({
+      product_id: it.productId,
+      quantity: Number(it.quantity || 0),
+    }));
+  }, [items]);
+
+  async function handleConfirmCheckout(formData) {
+    clearMessages();
+
+    if (!isUser) return;
+
+    try {
+      const order = await createOrder({ items: orderPayloadItems });
+      clear();
+      setCheckoutOpen(false);
+      navigate(`/orders/${order.id}`);
+    } catch {}
+  }
+
+  const canCheckout = isUser && items.length > 0 && !isLoading;
 
   return (
     <div className='mx-auto max-w-6xl px-4 py-10'>
@@ -155,20 +195,60 @@ export default function Cart() {
               </div>
             </div>
 
+            {!user ? (
+              <div className='mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700'>
+                Please sign in to checkout.
+                <div className='mt-2 flex gap-2'>
+                  <Link
+                    to='/login'
+                    className='inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700'
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to='/register'
+                    className='inline-flex items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50'
+                  >
+                    Register
+                  </Link>
+                </div>
+              </div>
+            ) : !isUser ? (
+              <div className='mt-5 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700'>
+                Checkout is available only for{' '}
+                <span className='font-semibold'>user</span> accounts.
+              </div>
+            ) : null}
+
             <button
-              disabled
-              className='mt-5 inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white opacity-60'
-              title='We will implement order creation later'
+              onClick={() => {
+                clearMessages();
+                setCheckoutOpen(true);
+              }}
+              disabled={!canCheckout}
+              className='mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-60'
             >
-              Checkout (coming soon)
+              <CreditCard size={18} />
+              Checkout
             </button>
 
             <div className='mt-3 text-xs text-slate-500'>
-              Next step: create an order from cart items.
+              After checkout, your order will be created and you’ll be
+              redirected to order details.
             </div>
           </div>
         </div>
       )}
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        items={items}
+        total={total}
+        isLoading={isLoading}
+        error={error}
+        onConfirm={handleConfirmCheckout}
+      />
     </div>
   );
 }
