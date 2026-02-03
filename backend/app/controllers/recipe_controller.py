@@ -141,6 +141,7 @@ def update_recipe(recipe_id: int):
             return jsonify({"error": "One or more products not found."}), 400
 
         recipe.ingredients.clear()
+        db.session.flush()
         for ing in parsed:
             recipe.ingredients.append(
                 RecipeIngredient(
@@ -212,26 +213,30 @@ def list_recipes():
     if direction not in ALLOWED_DIR:
         direction = "asc"
 
-    q = Recipe.query
 
+    q = (
+        Recipe.query
+        .outerjoin(RecipeIngredient)
+        .outerjoin(Product, Product.id == RecipeIngredient.product_id)
+    )
+
+    # filter po proizvodu
     if product_id:
         try:
             pid = int(product_id)
         except ValueError:
             return jsonify({"error": "productId must be an integer"}), 400
-        q = q.join(RecipeIngredient).filter(RecipeIngredient.product_id == pid)
+        q = q.filter(RecipeIngredient.product_id == pid)
 
+    # search filter
     if search:
-        q = (
-            q.outerjoin(RecipeIngredient)
-             .outerjoin(Product, Product.id == RecipeIngredient.product_id)
-             .filter(
-                 db.or_(
-                     Recipe.name.ilike(f"%{search}%"),
-                     Recipe.description.ilike(f"%{search}%"),
-                     Product.name.ilike(f"%{search}%"),
-                 )
-             )
+        like = f"%{search}%"
+        q = q.filter(
+            db.or_(
+                Recipe.name.ilike(like),
+                Recipe.description.ilike(like),
+                Product.name.ilike(like),
+            )
         )
 
     q = q.distinct()

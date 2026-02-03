@@ -45,27 +45,27 @@ export default function ProductModal({ open, onClose, product }) {
   }, [open, product?.id]);
 
   const nameErr = useMemo(() => {
-    if (!touched) return '';
+    //if (!touched) return '';
     if (!name.trim()) return 'Name is required.';
     return '';
   }, [touched, name]);
 
   const unitErr = useMemo(() => {
-    if (!touched) return '';
+    //if (!touched) return '';
     if ((unit || '').trim().length > 50)
       return 'Unit must be at most 50 characters.';
     return '';
   }, [touched, unit]);
 
   const priceErr = useMemo(() => {
-    if (!touched) return '';
+    //if (!touched) return '';
     const p = Number(price);
     if (!Number.isFinite(p) || p <= 0) return 'Price must be a number > 0.';
     return '';
   }, [touched, price]);
 
   const stockErr = useMemo(() => {
-    if (!touched) return '';
+    //if (!touched) return '';
     const s = Number(stock);
     if (!Number.isInteger(s) || s < 0) return 'Stock must be an integer >= 0.';
     return '';
