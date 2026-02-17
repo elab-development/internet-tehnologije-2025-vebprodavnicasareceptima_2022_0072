@@ -10,6 +10,7 @@ import { useCartStore } from '../stores/cartStore';
 import RecipeHeader from '../components/recipes/RecipeHeader';
 import IngredientsTable from '../components/recipes/IngredientsTable';
 import RecipeActions from '../components/recipes/RecipeActions';
+import ExternalRecipesSection from '../components/recipes/ExternalRecipesSection';
 
 export default function RecipeDetails() {
   const { recipeId } = useParams();
@@ -109,6 +110,8 @@ export default function RecipeDetails() {
               />
             </div>
           </div>
+
+          <ExternalRecipesSection recipe={recipe} />
         </div>
       )}
     </div>
