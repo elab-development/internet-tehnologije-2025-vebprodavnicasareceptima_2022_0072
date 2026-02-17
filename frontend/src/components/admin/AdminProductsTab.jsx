@@ -3,7 +3,6 @@ import { Plus, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-react';
 
 import { useProductsStore } from '../../stores/productsStore';
 import ProductModal from './modals/ProductModal';
-import { money } from '../../utils/helpers';
 
 export default function AdminProductsTab() {
   const items = useProductsStore((s) => s.items);
@@ -192,7 +191,7 @@ export default function AdminProductsTab() {
       {/* Table */}
       <div className='mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white'>
         <div className='overflow-x-auto'>
-          <table className='w-full min-w-[740px] text-left'>
+          <table className='w-full min-w-185 text-left'>
             <thead className='bg-slate-50'>
               <tr className='text-xs font-extrabold uppercase tracking-wide text-slate-600'>
                 <th className='px-4 py-3'>Name</th>
@@ -227,7 +226,7 @@ export default function AdminProductsTab() {
                     </td>
 
                     <td className='px-4 py-4 text-slate-700'>
-                      {money(p.price)}
+                      ${p.price.toFixed(2) || '0.00'}
                     </td>
 
                     <td className='px-4 py-4'>

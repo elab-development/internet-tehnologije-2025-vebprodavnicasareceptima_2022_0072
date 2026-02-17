@@ -194,7 +194,7 @@ export default function RecipeModal({ open, onClose, recipe }) {
 
   return (
     <div
-      className='fixed inset-0 z-[100] flex items-center justify-center p-4'
+      className='fixed inset-0 z-100 flex items-center justify-center p-4'
       role='dialog'
       aria-modal='true'
     >
@@ -260,7 +260,7 @@ export default function RecipeModal({ open, onClose, recipe }) {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className='min-h-[84px] w-full resize-none bg-transparent text-sm outline-none'
+                className='min-h-21 w-full resize-none bg-transparent text-sm outline-none'
                 placeholder='Short cooking instructions or notes...'
               />
             </div>

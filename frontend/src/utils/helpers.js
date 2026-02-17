@@ -1,6 +1,33 @@
-export function money(n) {
-  const x = Number(n || 0);
-  return `$${x.toFixed(2)}`;
+import { useMemo } from 'react';
+import { useCurrencyStore } from '../stores/currencyStore';
+
+function formatMoney(amountUsd, currency, rates) {
+  const usd = Number(amountUsd ?? 0);
+  const rate = Number(rates?.[currency] ?? 1);
+  const value = usd * rate;
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency || 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    const symbol =
+      currency === 'EUR' ? '€' : currency === 'USD' ? '$' : `${currency} `;
+    return `${symbol}${value.toFixed(2)}`;
+  }
+}
+
+export function useMoney(amountUsd) {
+  const currency = useCurrencyStore((s) => s.currency);
+  const rate = useCurrencyStore((s) => s.rates?.[s.currency] ?? 1);
+
+  return useMemo(() => {
+    const rates = { [currency]: rate };
+    return formatMoney(amountUsd, currency, rates);
+  }, [amountUsd, currency, rate]);
 }
 
 export function badge(status) {

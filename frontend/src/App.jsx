@@ -1,4 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+import { useCurrencyStore } from './stores/currencyStore';
 
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -23,6 +26,12 @@ import OrderDetails from './pages/OrderDetails';
 import Admin from './pages/Admin';
 
 function App() {
+  const initCurrency = useCurrencyStore((s) => s.init);
+
+  useEffect(() => {
+    initCurrency();
+  }, [initCurrency]);
+
   return (
     <BrowserRouter>
       <AuthBootstrap />

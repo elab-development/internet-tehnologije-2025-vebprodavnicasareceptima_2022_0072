@@ -220,7 +220,7 @@ export default function AdminRecipesTab() {
       {/* Table */}
       <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white'>
         <div className='overflow-x-auto'>
-          <table className='min-w-[900px] w-full text-left text-sm'>
+          <table className='min-w-225 w-full text-left text-sm'>
             <thead className='bg-slate-50 text-slate-700'>
               <tr>
                 <th className='px-4 py-3 font-extrabold'>ID</th>
@@ -240,7 +240,7 @@ export default function AdminRecipesTab() {
                       </div>
                     </td>
                     <td className='px-4 py-3 text-slate-700'>
-                      <div className='max-w-[520px] truncate'>
+                      <div className='max-w-130 truncate'>
                         {r.description || '-'}
                       </div>
                     </td>

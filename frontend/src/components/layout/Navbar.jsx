@@ -15,6 +15,7 @@ import {
 import logo from '../../assets/logo.png';
 import { useAuthStore } from '../../stores/authStore';
 import { useCartStore } from '../../stores/cartStore';
+import { useCurrencyStore } from '../../stores/currencyStore';
 
 function NavItem({ to, icon: Icon, children, onClick }) {
   return (
@@ -36,6 +37,28 @@ function NavItem({ to, icon: Icon, children, onClick }) {
   );
 }
 
+function CurrencySelect({ value, options, onChange, compact = false }) {
+  return (
+    <div className={compact ? 'w-full' : ''}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={[
+          'rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50',
+          compact ? 'w-full' : '',
+        ].join(' ')}
+        aria-label='Select currency'
+      >
+        {options.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 export default function Navbar() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -44,6 +67,10 @@ export default function Navbar() {
     [user],
   );
   const cartCount = useCartStore((s) => s.totalItems());
+
+  const currency = useCurrencyStore((s) => s.currency);
+  const available = useCurrencyStore((s) => s.available);
+  const setCurrency = useCurrencyStore((s) => s.setCurrency);
 
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
@@ -99,7 +126,7 @@ export default function Navbar() {
                 <span>Cart</span>
 
                 {cartCount > 0 ? (
-                  <span className='ml-1 inline-flex min-w-[22px] items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
+                  <span className='ml-1 inline-flex min-w-5.5 items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
                     {cartCount}
                   </span>
                 ) : null}
@@ -138,6 +165,13 @@ export default function Navbar() {
                 Register
               </Link>
             </div>
+          )}
+          {user?.role === 'admin' ? null : (
+            <CurrencySelect
+              value={currency}
+              options={available}
+              onChange={setCurrency}
+            />
           )}
         </nav>
 
@@ -187,7 +221,7 @@ export default function Navbar() {
                     <span>Cart</span>
 
                     {cartCount > 0 ? (
-                      <span className='ml-1 inline-flex min-w-[22px] items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
+                      <span className='ml-1 inline-flex min-w-5.5 items-center justify-center rounded-full bg-green-600 px-2 py-0.5 text-xs font-bold text-white'>
                         {cartCount}
                       </span>
                     ) : null}
@@ -236,6 +270,16 @@ export default function Navbar() {
                     Register
                   </Link>
                 </div>
+              )}
+              {user?.role === 'admin' ? null : (
+                <CurrencySelect
+                  value={currency}
+                  options={available}
+                  onChange={(c) => {
+                    setCurrency(c);
+                  }}
+                  compact
+                />
               )}
             </div>
           </div>

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 import { useOrdersStore } from '../../stores/ordersStore';
-import { money, badge } from '../../utils/helpers';
+import { badge } from '../../utils/helpers';
 
 const STATUS_OPTIONS = [
   '',
@@ -250,7 +250,7 @@ export default function AdminOrdersTab() {
       {/* Table */}
       <div className='overflow-hidden rounded-2xl border border-slate-200 bg-white'>
         <div className='overflow-x-auto'>
-          <table className='min-w-[980px] w-full text-left text-sm'>
+          <table className='min-w-245 w-full text-left text-sm'>
             <thead className='bg-slate-50 text-slate-700'>
               <tr>
                 <th className='px-4 py-3 font-extrabold'>Order</th>
@@ -292,7 +292,7 @@ export default function AdminOrdersTab() {
 
                       <td className='px-4 py-3'>
                         <span className='text-base font-extrabold text-slate-900'>
-                          {money(o.total_price)}
+                          ${o.total_price.toFixed(2) || '0.00'}
                         </span>
                       </td>
 

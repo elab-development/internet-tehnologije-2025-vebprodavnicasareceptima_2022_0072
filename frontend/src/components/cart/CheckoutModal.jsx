@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { money } from '../../utils/helpers';
+import { useMoney } from '../../utils/helpers';
 
 export default function CheckoutModal({
   open,
@@ -24,6 +24,8 @@ export default function CheckoutModal({
   const [address, setAddress] = useState('');
   const [note, setNote] = useState('');
   const [touched, setTouched] = useState(false);
+
+  const totalLabel = useMoney(total);
 
   const canSubmit = useMemo(() => {
     if (!items?.length) return false;
@@ -50,7 +52,7 @@ export default function CheckoutModal({
 
   return (
     <div
-      className='fixed inset-0 z-[100] flex items-center justify-center p-4'
+      className='fixed inset-0 z-100 flex items-center justify-center p-4'
       role='dialog'
       aria-modal='true'
     >
@@ -161,7 +163,7 @@ export default function CheckoutModal({
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                className='min-h-[84px] w-full resize-none bg-transparent text-sm outline-none'
+                className='min-h-21 w-full resize-none bg-transparent text-sm outline-none'
                 placeholder='Delivery notes, door code, etc.'
               />
             </div>
@@ -179,7 +181,7 @@ export default function CheckoutModal({
               <div className='flex items-center justify-between'>
                 <span>Total</span>
                 <span className='text-base font-extrabold text-slate-900'>
-                  {money(total)}
+                  {totalLabel}
                 </span>
               </div>
             </div>

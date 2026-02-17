@@ -10,7 +10,41 @@ import {
 
 import { useOrdersStore } from '../stores/ordersStore';
 import { useAuthStore } from '../stores/authStore';
-import { badge, money } from '../utils/helpers';
+import { badge, useMoney } from '../utils/helpers';
+
+function OrderItemRow({ it }) {
+  const qty = Number(it.quantity || 0);
+  const price = Number(it.price_at_purchase || 0);
+  const line = qty * price;
+
+  const priceLabel = useMoney(price);
+  const lineLabel = useMoney(line);
+
+  return (
+    <div className='rounded-xl border border-slate-200 bg-white p-4'>
+      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='min-w-0'>
+          <div className='text-sm font-extrabold text-slate-900 truncate'>
+            {it.product_name || `Product #${it.product_id}`}
+          </div>
+          <div className='mt-1 text-sm text-slate-600'>
+            Qty: <span className='font-semibold text-slate-800'>{qty}</span>
+            <span className='mx-2 text-slate-300'>•</span>
+            Price:{' '}
+            <span className='font-semibold text-slate-800'>{priceLabel}</span>
+          </div>
+        </div>
+
+        <div className='text-right'>
+          <div className='text-xs text-slate-500'>Subtotal</div>
+          <div className='text-base font-extrabold text-slate-900'>
+            {lineLabel}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function OrderDetails() {
   const { orderId } = useParams();
@@ -32,13 +66,15 @@ export default function OrderDetails() {
   const fetchOrderById = useOrdersStore((s) => s.fetchOrderById);
   const cancelOrder = useOrdersStore((s) => s.cancelOrder);
 
+  const totalLabel = useMoney(order?.total_price ?? 0);
+
   useEffect(() => {
     clearMessages();
     clearOrder();
 
     if (!orderId) return;
-
     fetchOrderById(orderId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   const forbidden = useMemo(() => {
@@ -185,44 +221,9 @@ export default function OrderDetails() {
               </div>
 
               <div className='mt-4 space-y-3'>
-                {(order.items || []).map((it) => {
-                  const qty = Number(it.quantity || 0);
-                  const price = Number(it.price_at_purchase || 0);
-                  const line = qty * price;
-
-                  return (
-                    <div
-                      key={it.id}
-                      className='rounded-xl border border-slate-200 bg-white p-4'
-                    >
-                      <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between'>
-                        <div className='min-w-0'>
-                          <div className='text-sm font-extrabold text-slate-900 truncate'>
-                            {it.product_name || `Product #${it.product_id}`}
-                          </div>
-                          <div className='mt-1 text-sm text-slate-600'>
-                            Qty:{' '}
-                            <span className='font-semibold text-slate-800'>
-                              {qty}
-                            </span>
-                            <span className='mx-2 text-slate-300'>•</span>
-                            Price:{' '}
-                            <span className='font-semibold text-slate-800'>
-                              {money(price)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className='text-right'>
-                          <div className='text-xs text-slate-500'>Subtotal</div>
-                          <div className='text-base font-extrabold text-slate-900'>
-                            {money(line)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {(order.items || []).map((it) => (
+                  <OrderItemRow key={it.id} it={it} />
+                ))}
 
                 {!order.items?.length ? (
                   <div className='text-sm text-slate-600'>
@@ -262,7 +263,7 @@ export default function OrderDetails() {
               <div className='mt-2 border-t border-slate-200 pt-3 flex items-center justify-between text-slate-700'>
                 <span>Total</span>
                 <span className='text-lg font-extrabold text-slate-900'>
-                  {money(order.total_price)}
+                  {totalLabel}
                 </span>
               </div>
             </div>

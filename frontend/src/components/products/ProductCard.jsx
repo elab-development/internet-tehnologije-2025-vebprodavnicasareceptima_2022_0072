@@ -1,8 +1,10 @@
 import { ShoppingCart, Package } from 'lucide-react';
+import { useMoney } from '../../utils/helpers';
 
 export default function ProductCard({ product, canAddToCart, onAddToCart }) {
   const stock = Number(product.stock ?? 0);
   const isOut = stock <= 0;
+  const priceLabel = useMoney(product.price);
 
   return (
     <div className='rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'>
@@ -25,7 +27,7 @@ export default function ProductCard({ product, canAddToCart, onAddToCart }) {
 
         <div className='text-right'>
           <div className='text-lg font-extrabold text-slate-900'>
-            ${Number(product.price).toFixed(2)}
+            {priceLabel}
           </div>
           <div className='mt-1 text-xs text-slate-500'>
             Stock:{' '}

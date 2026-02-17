@@ -4,7 +4,64 @@ import { User, Mail, Shield, XCircle, ArrowRight } from 'lucide-react';
 
 import { useAuthStore } from '../stores/authStore';
 import { useOrdersStore } from '../stores/ordersStore';
-import { badge, money } from '../utils/helpers';
+import { badge, useMoney } from '../utils/helpers';
+
+function OrderCard({ o, isUser, onCancel }) {
+  const status = String(o.status || '').toUpperCase();
+  const canCancel = isUser && status === 'PENDING';
+  const totalLabel = useMoney(o.total_price);
+
+  return (
+    <div className='rounded-xl border border-slate-200 bg-white p-4'>
+      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
+        <div className='min-w-0'>
+          <div className='flex flex-wrap items-center gap-2'>
+            <div className='text-sm font-extrabold text-slate-900'>
+              Order #{o.id}
+            </div>
+            <span className={badge(o.status)}>{status}</span>
+          </div>
+
+          <div className='mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-700'>
+            <div>
+              Total:{' '}
+              <span className='font-extrabold text-slate-900'>
+                {totalLabel}
+              </span>
+            </div>
+            <div className='text-slate-500'>
+              Created:{' '}
+              <span className='font-semibold text-slate-700'>
+                {o.created_at ? new Date(o.created_at).toLocaleString() : '—'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className='flex items-center gap-2 sm:justify-end'>
+          <Link
+            to={`/orders/${o.id}`}
+            className='inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700'
+          >
+            Details
+            <ArrowRight size={18} />
+          </Link>
+
+          {canCancel ? (
+            <button
+              onClick={() => onCancel(o.id)}
+              className='inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50'
+              title='Cancel order'
+            >
+              <XCircle size={18} />
+              Cancel
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Profile() {
   const user = useAuthStore((s) => s.user);
@@ -24,6 +81,7 @@ export default function Profile() {
   useEffect(() => {
     clearMessages();
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sorted = useMemo(() => orders || [], [orders]);
@@ -32,6 +90,7 @@ export default function Profile() {
     clearMessages();
     try {
       await cancelOrder(orderId);
+      await fetchOrders();
     } catch {}
   }
 
@@ -129,66 +188,14 @@ export default function Profile() {
               </div>
             ) : (
               <div className='mt-4 space-y-3'>
-                {sorted.map((o) => {
-                  const status = String(o.status || '').toUpperCase();
-                  const canCancel = isUser && status === 'PENDING';
-
-                  return (
-                    <div
-                      key={o.id}
-                      className='rounded-xl border border-slate-200 bg-white p-4'
-                    >
-                      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-                        <div className='min-w-0'>
-                          <div className='flex flex-wrap items-center gap-2'>
-                            <div className='text-sm font-extrabold text-slate-900'>
-                              Order #{o.id}
-                            </div>
-                            <span className={badge(o.status)}>{status}</span>
-                          </div>
-
-                          <div className='mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-700'>
-                            <div>
-                              Total:{' '}
-                              <span className='font-extrabold text-slate-900'>
-                                {money(o.total_price)}
-                              </span>
-                            </div>
-                            <div className='text-slate-500'>
-                              Created:{' '}
-                              <span className='font-semibold text-slate-700'>
-                                {o.created_at
-                                  ? new Date(o.created_at).toLocaleString()
-                                  : '—'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className='flex items-center gap-2 sm:justify-end'>
-                          <Link
-                            to={`/orders/${o.id}`}
-                            className='inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700'
-                          >
-                            Details
-                            <ArrowRight size={18} />
-                          </Link>
-
-                          {canCancel ? (
-                            <button
-                              onClick={() => onCancel(o.id)}
-                              className='inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50'
-                              title='Cancel order'
-                            >
-                              <XCircle size={18} />
-                              Cancel
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {sorted.map((o) => (
+                  <OrderCard
+                    key={o.id}
+                    o={o}
+                    isUser={isUser}
+                    onCancel={onCancel}
+                  />
+                ))}
               </div>
             )}
           </div>
