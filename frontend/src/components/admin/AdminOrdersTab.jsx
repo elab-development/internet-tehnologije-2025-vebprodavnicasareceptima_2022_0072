@@ -292,7 +292,7 @@ export default function AdminOrdersTab() {
 
                       <td className='px-4 py-3'>
                         <span className='text-base font-extrabold text-slate-900'>
-                          ${o.total_price.toFixed(2) || '0.00'}
+                          ${o.total_price || '0.00'}
                         </span>
                       </td>
 

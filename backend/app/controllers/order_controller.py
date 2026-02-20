@@ -22,9 +22,54 @@ def _calc_total(order: Order) -> Decimal:
 
 def create_order():
     """
-    User-only. Body: { items: [ {product_id, quantity}, ... ] }
-    price_at_purchase uzimamo iz Product.price
-    total_price se računa.
+    Create order (user)
+    ---
+    tags:
+      - Orders
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                required: [product_id, quantity]
+                properties:
+                  product_id: { type: integer, example: 1 }
+                  quantity: { type: integer, example: 2 }
+    responses:
+      201:
+        description: Created
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            order:
+              $ref: '#/definitions/OrderDetails'
+      400:
+        description: Validation / stock / not found
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not user)
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Duplicate product in order items
+        schema:
+          $ref: '#/definitions/Error'
     """
     data = request.get_json(silent=True) or {}
     items = data.get("items") or []
@@ -109,10 +154,47 @@ def create_order():
 
 def list_orders():
     """
-    Auth required.
-    - User: vidi samo svoje.
-    - Admin: vidi sve + filter userId/status.
-    Sort: total_price, created_at
+    List orders (auth)
+    ---
+    tags:
+      - Orders
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: query
+        name: sort
+        type: string
+        enum: ["total_price", "created_at"]
+        default: "created_at"
+      - in: query
+        name: dir
+        type: string
+        enum: ["asc", "desc"]
+        default: "desc"
+      - in: query
+        name: userId
+        type: integer
+        required: false
+        description: Admin-only filter
+      - in: query
+        name: status
+        type: string
+        required: false
+        enum: ["PENDING", "PROCESSING", "PAID", "COMPLETED", "CANCELLED"]
+        description: Admin-only filter
+    responses:
+      200:
+        description: Orders list
+        schema:
+          $ref: '#/definitions/OrdersListResponse'
+      400:
+        description: Invalid filter
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
     """
     sort = (request.args.get("sort") or "created_at").strip().lower()
     direction = (request.args.get("dir") or "desc").strip().lower()
@@ -167,9 +249,37 @@ def list_orders():
 
 def get_order(order_id: int):
     """
-    Auth required.
-    - User: samo svoje
-    - Admin: bilo koju
+    Get order by id (auth)
+    ---
+    tags:
+      - Orders
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: order_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Order details
+        schema:
+          type: object
+          properties:
+            order:
+              $ref: '#/definitions/OrderDetails'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (user trying to access another user's order)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Order not found
+        schema:
+          $ref: '#/definitions/Error'
     """
     order = Order.query.get(order_id)
     if not order:
@@ -202,7 +312,41 @@ def get_order(order_id: int):
 
 def cancel_order(order_id: int):
     """
-    User-only: može samo svoje i samo ako je PENDING
+    Cancel order (user, only PENDING)
+    ---
+    tags:
+      - Orders
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: order_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Cancelled
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            status: { type: string }
+      400:
+        description: Only PENDING can be cancelled
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Order not found
+        schema:
+          $ref: '#/definitions/Error'
     """
     order = Order.query.get(order_id)
     if not order:
@@ -222,7 +366,51 @@ def cancel_order(order_id: int):
 
 def admin_update_status(order_id: int):
     """
-    Admin-only: menja status na ostale (PROCESSING/PAID/COMPLETED/CANCELLED).
+    Update order status (admin)
+    ---
+    tags:
+      - Orders
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: order_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: ["PENDING", "PROCESSING", "PAID", "COMPLETED", "CANCELLED"]
+    responses:
+      200:
+        description: Status updated
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            status: { type: string }
+      400:
+        description: Invalid status / final status rule
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Order not found
+        schema:
+          $ref: '#/definitions/Error'
     """
     order = Order.query.get(order_id)
     if not order:

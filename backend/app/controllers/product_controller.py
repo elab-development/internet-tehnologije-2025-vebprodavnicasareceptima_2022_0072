@@ -19,6 +19,51 @@ def _parse_price(value):
 
 
 def create_product():
+    """
+    Create product (admin)
+    ---
+    tags:
+      - Products
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, price]
+          properties:
+            name: { type: string, example: "Milk" }
+            unit: { type: string, example: "L" }
+            price: { type: number, example: 2.00 }
+            stock: { type: integer, example: 10 }
+    responses:
+      201:
+        description: Created
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            product:
+              $ref: '#/definitions/Product'
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Unique constraint
+        schema:
+          $ref: '#/definitions/Error'
+    """
     data = request.get_json(silent=True) or {}
 
     name = (data.get("name") or "").strip()
@@ -66,6 +111,58 @@ def create_product():
 
 
 def update_product(product_id: int):
+    """
+    Update product (admin)
+    ---
+    tags:
+      - Products
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: product_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name: { type: string }
+            unit: { type: string }
+            price: { type: number }
+            stock: { type: integer }
+    responses:
+      200:
+        description: Updated
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            product:
+              $ref: '#/definitions/Product'
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Unique constraint
+        schema:
+          $ref: '#/definitions/Error'
+    """
     product = Product.query.get(product_id)
     if not product:
         return jsonify({"error": "Product not found."}), 404
@@ -118,6 +215,38 @@ def update_product(product_id: int):
 
 
 def delete_product(product_id: int):
+    """
+    Delete product (admin)
+    ---
+    tags:
+      - Products
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: product_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Deleted
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     product = Product.query.get(product_id)
     if not product:
         return jsonify({"error": "Product not found."}), 404
@@ -129,6 +258,34 @@ def delete_product(product_id: int):
 
 
 def list_products():
+    """
+    List products
+    ---
+    tags:
+      - Products
+    parameters:
+      - in: query
+        name: search
+        type: string
+        required: false
+      - in: query
+        name: sort
+        type: string
+        required: false
+        enum: ["name", "unit", "price", "stock", "created_at"]
+        default: "created_at"
+      - in: query
+        name: dir
+        type: string
+        required: false
+        enum: ["asc", "desc"]
+        default: "desc"
+    responses:
+      200:
+        description: Products list
+        schema:
+          $ref: '#/definitions/ProductsListResponse'
+    """
     search = (request.args.get("search") or "").strip()
     sort = (request.args.get("sort") or "created_at").strip().lower()
     direction = (request.args.get("dir") or "desc").strip().lower()
@@ -167,6 +324,29 @@ def list_products():
 
 
 def get_product(product_id: int):
+    """
+    Get product by id
+    ---
+    tags:
+      - Products
+    parameters:
+      - in: path
+        name: product_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Product
+        schema:
+          type: object
+          properties:
+            product:
+              $ref: '#/definitions/Product'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     p = Product.query.get(product_id)
     if not p:
         return jsonify({"error": "Product not found."}), 404

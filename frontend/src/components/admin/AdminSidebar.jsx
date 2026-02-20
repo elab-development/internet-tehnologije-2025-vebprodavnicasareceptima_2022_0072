@@ -1,4 +1,4 @@
-import { Package, CookingPot, ClipboardList } from 'lucide-react';
+import { Package, CookingPot, ClipboardList, BarChart3 } from 'lucide-react';
 
 function Item({ active, icon: Icon, title, subtitle, onClick }) {
   return (
@@ -45,6 +45,14 @@ export default function AdminSidebar({ tab, setTab }) {
       </div>
 
       <div className='mt-3 grid gap-2'>
+        <Item
+          active={tab === 'overview'}
+          icon={BarChart3}
+          title='Overview'
+          subtitle='KPIs, charts and low stock'
+          onClick={() => setTab('overview')}
+        />
+
         <Item
           active={tab === 'products'}
           icon={Package}

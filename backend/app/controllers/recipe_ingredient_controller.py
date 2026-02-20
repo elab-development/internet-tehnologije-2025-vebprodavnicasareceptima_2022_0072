@@ -6,6 +6,33 @@ from app.models import RecipeIngredient, Product, Recipe
 
 
 def list_recipe_ingredients():
+    """
+    List recipe ingredients (optional filter by recipeId)
+    ---
+    tags:
+      - RecipeIngredients
+    parameters:
+      - in: query
+        name: recipeId
+        type: integer
+        required: false
+    responses:
+      200:
+        description: Ingredients list
+        schema:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/RecipeIngredient'
+            count: { type: integer }
+            recipeId: { type: string }
+      400:
+        description: Invalid recipeId
+        schema:
+          $ref: '#/definitions/Error'
+    """
     recipe_id = request.args.get("recipeId")
     q = RecipeIngredient.query
 
@@ -36,6 +63,29 @@ def list_recipe_ingredients():
 
 
 def get_recipe_ingredient(ri_id: int):
+    """
+    Get recipe ingredient by id
+    ---
+    tags:
+      - RecipeIngredients
+    parameters:
+      - in: path
+        name: ri_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Ingredient item
+        schema:
+          type: object
+          properties:
+            item:
+              $ref: '#/definitions/RecipeIngredient'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     ri = RecipeIngredient.query.get(ri_id)
     if not ri:
         return jsonify({"error": "RecipeIngredient not found."}), 404
@@ -53,6 +103,55 @@ def get_recipe_ingredient(ri_id: int):
 
 
 def update_recipe_ingredient(ri_id: int):
+    """
+    Update recipe ingredient (admin)
+    ---
+    tags:
+      - RecipeIngredients
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: ri_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            product_id: { type: integer }
+            quantity: { type: integer }
+            unit: { type: string }
+    responses:
+      200:
+        description: Updated
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Duplicate product in same recipe
+        schema:
+          $ref: '#/definitions/Error'
+    """
     ri = RecipeIngredient.query.get(ri_id)
     if not ri:
         return jsonify({"error": "RecipeIngredient not found."}), 404
@@ -93,6 +192,38 @@ def update_recipe_ingredient(ri_id: int):
 
 
 def delete_recipe_ingredient(ri_id: int):
+    """
+    Delete recipe ingredient (admin)
+    ---
+    tags:
+      - RecipeIngredients
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: ri_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Deleted
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     ri = RecipeIngredient.query.get(ri_id)
     if not ri:
         return jsonify({"error": "RecipeIngredient not found."}), 404

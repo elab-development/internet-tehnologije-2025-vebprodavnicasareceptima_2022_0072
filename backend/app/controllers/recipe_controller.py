@@ -35,6 +35,58 @@ def _validate_ingredient_obj(obj):
 
 
 def create_recipe():
+    """
+    Create recipe (admin)
+    ---
+    tags:
+      - Recipes
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, ingredients]
+          properties:
+            name: { type: string, example: "Pancakes" }
+            description: { type: string, example: "Simple pancakes" }
+            ingredients:
+              type: array
+              items:
+                type: object
+                required: [product_id, quantity]
+                properties:
+                  product_id: { type: integer, example: 1 }
+                  quantity: { type: integer, example: 2 }
+                  unit: { type: string, example: "pcs" }
+    responses:
+      201:
+        description: Created
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            recipe:
+              $ref: '#/definitions/RecipeDetails'
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Unique / duplicate ingredient product
+        schema:
+          $ref: '#/definitions/Error'
+    """
     data = request.get_json(silent=True) or {}
 
     name = (data.get("name") or "").strip()
@@ -106,6 +158,68 @@ def create_recipe():
 
 
 def update_recipe(recipe_id: int):
+    """
+    Update recipe (admin)
+    ---
+    tags:
+      - Recipes
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: recipe_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            name: { type: string }
+            description: { type: string }
+            ingredients:
+              type: array
+              items:
+                type: object
+                properties:
+                  product_id: { type: integer }
+                  quantity: { type: integer }
+                  unit: { type: string }
+    responses:
+      200:
+        description: Updated
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+            recipe:
+              type: object
+              properties:
+                id: { type: integer }
+                name: { type: string }
+                description: { type: string }
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Unique / duplicate ingredient product
+        schema:
+          $ref: '#/definitions/Error'
+    """
     recipe = Recipe.query.get(recipe_id)
     if not recipe:
         return jsonify({"error": "Recipe not found."}), 404
@@ -168,6 +282,38 @@ def update_recipe(recipe_id: int):
 
 
 def delete_recipe(recipe_id: int):
+    """
+    Delete recipe (admin)
+    ---
+    tags:
+      - Recipes
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: recipe_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Deleted
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden (not admin)
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     recipe = Recipe.query.get(recipe_id)
     if not recipe:
         return jsonify({"error": "Recipe not found."}), 404
@@ -178,6 +324,29 @@ def delete_recipe(recipe_id: int):
 
 
 def get_recipe(recipe_id: int):
+    """
+    Get recipe by id
+    ---
+    tags:
+      - Recipes
+    parameters:
+      - in: path
+        name: recipe_id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Recipe details
+        schema:
+          type: object
+          properties:
+            recipe:
+              $ref: '#/definitions/RecipeDetails'
+      404:
+        description: Not found
+        schema:
+          $ref: '#/definitions/Error'
+    """
     recipe = Recipe.query.get(recipe_id)
     if not recipe:
         return jsonify({"error": "Recipe not found."}), 404
@@ -203,6 +372,44 @@ def get_recipe(recipe_id: int):
 
 
 def list_recipes():
+    """
+    List recipes
+    ---
+    tags:
+      - Recipes
+    parameters:
+      - in: query
+        name: search
+        type: string
+        required: false
+        description: Search by recipe name/description or ingredient product name
+      - in: query
+        name: sort
+        type: string
+        required: false
+        enum: ["name"]
+        default: "name"
+      - in: query
+        name: dir
+        type: string
+        required: false
+        enum: ["asc", "desc"]
+        default: "asc"
+      - in: query
+        name: productId
+        type: integer
+        required: false
+        description: Filter recipes that use a product
+    responses:
+      200:
+        description: Recipes list
+        schema:
+          $ref: '#/definitions/RecipesListResponse'
+      400:
+        description: Invalid productId
+        schema:
+          $ref: '#/definitions/Error'
+    """
     search = (request.args.get("search") or "").strip()
     sort = (request.args.get("sort") or "name").strip().lower()
     direction = (request.args.get("dir") or "asc").strip().lower()

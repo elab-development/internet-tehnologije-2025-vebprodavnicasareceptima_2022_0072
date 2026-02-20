@@ -8,6 +8,37 @@ from app.models import User
 
 
 def register():
+    """
+    Register new user
+    ---
+    tags:
+      - Auth
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [name, email, password]
+          properties:
+            name: { type: string, example: "Marko" }
+            email: { type: string, example: "marko@test.com" }
+            password: { type: string, example: "Pass123!" }
+            role: { type: string, enum: ["user", "admin"], example: "user" }
+    responses:
+      201:
+        description: Registered successfully
+        schema:
+          $ref: '#/definitions/AuthResponse'
+      400:
+        description: Validation error
+        schema:
+          $ref: '#/definitions/Error'
+      409:
+        description: Email already exists
+        schema:
+          $ref: '#/definitions/Error'
+    """
     data = request.get_json(silent=True) or {}
 
     name = (data.get("name") or "").strip()
@@ -51,6 +82,35 @@ def register():
 
 
 def login():
+    """
+    Login
+    ---
+    tags:
+      - Auth
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [email, password]
+          properties:
+            email: { type: string, example: "marko@test.com" }
+            password: { type: string, example: "Pass123!" }
+    responses:
+      200:
+        description: Logged in
+        schema:
+          $ref: '#/definitions/AuthResponse'
+      400:
+        description: Missing fields
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Invalid credentials
+        schema:
+          $ref: '#/definitions/Error'
+    """
     data = request.get_json(silent=True) or {}
 
     email = (data.get("email") or "").strip().lower()
@@ -77,12 +137,40 @@ def login():
 
 
 def logout():
+    """
+    Logout (clears session)
+    ---
+    tags:
+      - Auth
+    security:
+      - cookieAuth: []
+    responses:
+      200:
+        description: Logged out
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+    """
     if current_user.is_authenticated:
         logout_user()
     return jsonify({"message": "Logged out."}), 200
 
 
 def me():
+    """
+    Current user (session)
+    ---
+    tags:
+      - Auth
+    security:
+      - cookieAuth: []
+    responses:
+      200:
+        description: Current user or null
+        schema:
+          $ref: '#/definitions/MeResponse'
+    """
     if not current_user.is_authenticated:
         return jsonify({"user": None}), 200
 

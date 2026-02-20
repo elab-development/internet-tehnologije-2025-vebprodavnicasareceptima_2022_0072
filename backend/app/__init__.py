@@ -3,10 +3,12 @@ from flask import Flask, jsonify
 from dotenv import load_dotenv
 from flask_cors import CORS
 from sqlalchemy import text
+from flasgger import Swagger
 
 from app.extensions import db, migrate, login_manager
 from app.routes import register_routes
 from app.models import User
+from app.swagger import swagger_template
 
 load_dotenv()
 
@@ -24,6 +26,7 @@ def create_app():
 
     cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173")
     CORS(app, supports_credentials=True, origins=[o.strip() for o in cors_origins.split(",")])
+    Swagger(app, template=swagger_template())
 
     db.init_app(app)
     migrate.init_app(app, db)

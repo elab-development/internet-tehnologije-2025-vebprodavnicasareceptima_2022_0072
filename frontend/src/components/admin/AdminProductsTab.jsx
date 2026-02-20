@@ -226,7 +226,7 @@ export default function AdminProductsTab() {
                     </td>
 
                     <td className='px-4 py-4 text-slate-700'>
-                      ${p.price.toFixed(2) || '0.00'}
+                      ${p.price || '0.00'}
                     </td>
 
                     <td className='px-4 py-4'>

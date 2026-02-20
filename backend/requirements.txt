@@ -7,3 +7,5 @@ Flask-Cors==4.0.1
 Flask-Login==0.6.3
 email-validator==2.2.0
 requests==2.32.3
+flasgger==0.9.7.1
+PyYAML==6.0.2

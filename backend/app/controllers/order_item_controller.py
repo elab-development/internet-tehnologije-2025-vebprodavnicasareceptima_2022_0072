@@ -9,9 +9,45 @@ from app.middlewares.order_rules import is_final_status
 
 def list_order_items():
     """
-    Query param: orderId (obavezno)
-    - user: samo ako je to njegov order
-    - admin: bilo koji
+    List order items (requires orderId)
+    ---
+    tags:
+      - OrderItems
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: query
+        name: orderId
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Items list
+        schema:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/definitions/OrderItem'
+            count: { type: integer }
+            orderId: { type: integer }
+      400:
+        description: Missing/invalid orderId
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Order not found
+        schema:
+          $ref: '#/definitions/Error'
     """
     order_id = request.args.get("orderId")
     if not order_id:
@@ -51,11 +87,48 @@ def list_order_items():
 
 def update_order_item(item_id: int):
     """
-    Auth required.
-    Može da menja samo quantity.
-    - user: samo ako je item u njegovom orderu
-    - admin: bilo koji
-    Ali samo ako order nije finalan (PAID/COMPLETED/CANCELLED).
+    Update order item quantity (auth, only non-final orders)
+    ---
+    tags:
+      - OrderItems
+    security:
+      - cookieAuth: []
+    parameters:
+      - in: path
+        name: item_id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [quantity]
+          properties:
+            quantity: { type: integer, example: 3 }
+    responses:
+      200:
+        description: Updated
+        schema:
+          type: object
+          properties:
+            message: { type: string }
+      400:
+        description: Validation / final order / stock
+        schema:
+          $ref: '#/definitions/Error'
+      401:
+        description: Not authenticated
+        schema:
+          $ref: '#/definitions/Error'
+      403:
+        description: Forbidden
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Item/order not found
+        schema:
+          $ref: '#/definitions/Error'
     """
     item = OrderItem.query.get(item_id)
     if not item:

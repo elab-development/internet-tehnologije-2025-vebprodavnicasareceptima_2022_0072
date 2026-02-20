@@ -44,8 +44,29 @@ def _normalize_themealdb_meal(meal: dict) -> dict:
 
 def search_external_recipes():
     """
-    GET /api/external/recipes?q=pasta
-    Vraca: { items: [...], count, q }
+    Search external recipes (TheMealDB)
+    ---
+    tags:
+      - ExternalRecipes
+    parameters:
+      - in: query
+        name: q
+        required: true
+        type: string
+        example: "pasta"
+    responses:
+      200:
+        description: External recipes list
+        schema:
+          $ref: '#/definitions/ExternalRecipesListResponse'
+      400:
+        description: Missing query param
+        schema:
+          $ref: '#/definitions/Error'
+      502:
+        description: External API not reachable / error
+        schema:
+          $ref: '#/definitions/Error'
     """
     q = (request.args.get("q") or "").strip()
     if not q:
@@ -73,8 +94,37 @@ def search_external_recipes():
 
 def get_external_recipe_details(source: str, external_id: str):
     """
-    GET /api/external/recipes/<source>/<external_id>
-    Trenutno podrzava: source=themealdb
+    External recipe details (TheMealDB)
+    ---
+    tags:
+      - ExternalRecipes
+    parameters:
+      - in: path
+        name: source
+        required: true
+        type: string
+        enum: ["themealdb"]
+      - in: path
+        name: external_id
+        required: true
+        type: string
+    responses:
+      200:
+        description: External recipe details
+        schema:
+          $ref: '#/definitions/ExternalRecipeDetailsResponse'
+      400:
+        description: Unsupported source / invalid input
+        schema:
+          $ref: '#/definitions/Error'
+      404:
+        description: Not found in external source
+        schema:
+          $ref: '#/definitions/Error'
+      502:
+        description: External API not reachable / error
+        schema:
+          $ref: '#/definitions/Error'
     """
     source = (source or "").strip().lower()
     if source != "themealdb":
